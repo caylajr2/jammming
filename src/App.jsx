@@ -1,31 +1,55 @@
-import { use, useState } from 'react'
+import { use, useState, useEffect } from 'react'
+import { client_id, redirect_uri, scopes } from './security';
 import './App.css'
 import SearchBar from './components/SearchBar';
 import SearchResults from './components/SearchResults';
 import Playlist from './components/Playlist';
 
-import testData from './testData';
-
+import Spotify from './Spotify';
 
 
 
 function App() {
-  const [searchResults, setResults] = useState(testData);
+  const [searchResults, setResults] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [playlistName, setPlaylistName] = useState('');
+  const [tracklist, setTracklist] = useState([]);
+
+  const [accessToken, setAccessToken] = useState(null);
+
+  async function handleAuth() {
+    try {
+      // Check URL for code and exchange it for tokens
+      const token = await Spotify.fetchAccessTokenFromCode();
+      if (token) {
+        setAccessToken(token);
+      } else {
+        // No code param, try to get stored token or redirect to login
+        const storedToken = await Spotify.getAccessToken();
+        if (storedToken) {
+          setAccessToken(storedToken);
+        } else {
+          Spotify.redirectToSpotifyAuth();
+        }
+      }
+    } catch (error) {
+      console.error('Auth failed:', error);
+      Spotify.redirectToSpotifyAuth();
+    }
+  }
+  
+  
+  if (!accessToken) {
+    return <button onClick={handleAuth}>Log In to Spotify</button>;
+  }
 
   const handleSearch = (term) => {
-    console.log('Searched for results:' + test);
-    // make call to api here
-    setResults(testData)
+    Spotify.search(term).then(setResults);
   }
 
   const updateSearch = (text) => {
     setSearchTerm(text)
   }
-
-
-  const [playlistName, setPlaylistName] = useState('');
-  const [tracklist, setTracklist] = useState([]);
 
   const addSong = (song) => {
     if (tracklist.includes(song)) alert('Song already in playlist')
@@ -33,20 +57,20 @@ function App() {
   }
 
   const removeSong = (songId) => {
-    console.log(songId)
-    setTracklist(prev => prev.filter(t => (t === songId)));
+    setTracklist(prev => prev.filter(t => (t !== songId)));
   }
 
   const savePlaylist = (playlistName, list) => {
-    console.log(list)
-    console.log(`saving playlist ${playlistName} with ${list}`);
+    const uris = list.map(track => track.uri);
+    Spotify.savePlaylist(playlistName, uris)
+    setPlaylistName("");
   }
 
   const clearPlaylist = () => {
-    console.log('clear list')
     setTracklist([]);
   }
 
+  
   return (
     <>
       <SearchBar handleSearch={handleSearch} searchTerm={searchTerm} updateSearch={updateSearch} />
