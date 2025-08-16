@@ -1,5 +1,5 @@
 var client_id = '3a60e2f15bf04b9aac02bf311a731373';
-var redirect_uri = 'http://127.0.0.1:5173/';
+var redirect_uri = 'https://jammming-caylajr2.netlify.app/';
 const scopes = [
   'playlist-modify-public',
   'playlist-modify-private',
