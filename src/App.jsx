@@ -8,7 +8,6 @@ import Playlist from './components/Playlist';
 import Spotify from './Spotify';
 
 
-
 function App() {
   const [searchResults, setResults] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
